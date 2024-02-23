@@ -1,4 +1,4 @@
-const { getToken } = require('../utils');
+const { getToken, policyFor } = require('../utils');
 const jwt = require('jsonwebtoken');
 const config = require('../app/config');
 const User = require('../app/user/model');
@@ -33,6 +33,20 @@ function decodeToken() {
   };
 };
 
+function police_check(action, subject) {
+  return function(req, res, next) {
+    let policy = policyFor(req.user);
+    if(!policy.can(action, subject)) {
+      return res.json({
+        error: 1,
+        message: `You're not allowed to ${action} ${subject}.`
+      });
+    };
+    next();
+  };
+};
+
 module.exports = {
-  decodeToken
+  decodeToken,
+  police_check
 };

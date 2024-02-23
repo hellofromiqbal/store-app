@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const path = require('path');
 const config = require('../config');
+const { police_check } = require('../../middlewares');
 
 const multer = require('multer');
 const storage = multer.diskStorage({
@@ -20,9 +21,26 @@ const upload = multer({ storage });
 
 const productController = require('./controller');
 
-router.get('/products', productController.index);
-router.post('/products', upload.single('image'), productController.store);
-router.put('/products/:id', upload.single('image'), productController.update);
-router.delete('/products/:id', productController.destroy);
+router.get(
+  '/products',
+  productController.index
+);
+router.post(
+  '/products',
+  upload.single('image'),
+  police_check('create', 'Product'),
+  productController.store
+);
+router.put(
+  '/products/:id',
+  upload.single('image'),
+  police_check('update', 'Product'),
+  productController.update
+);
+router.delete(
+  '/products/:id',
+  police_check('delete', 'Product'),
+  productController.destroy
+);
 
 module.exports = router;
