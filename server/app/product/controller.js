@@ -84,7 +84,7 @@ const store = async (req, res) => {
   };
 };
 
-const index = async (req, res, next) => {
+const index = async (req, res) => {
   try {
     const { skip = 0, limit = 10, q = '', category = '', tags = [] } = req.query;
 
@@ -127,10 +127,14 @@ const index = async (req, res, next) => {
       message: 'Products fetched!',
       data: products
     });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    return res.json({
+      message: err.message
+    });
   };
 };
+
+const update = async (req,)
 
 module.exports = {
   store,
