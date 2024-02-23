@@ -18,6 +18,7 @@ const upload = multer({ storage });
 
 const productController = require('./controller');
 
+router.get('/products', productController.index);
 router.post('/products', upload.single('image'), productController.store);
 
 module.exports = router;
