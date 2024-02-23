@@ -35,44 +35,6 @@ const store = async (req, res) => {
       data: newProduct
     });
 
-    // if(req.file) {
-    //   const tmp_path = req.file.path;
-    //   const originalExt = req.file.originalname.split('.').pop();
-    //   const filename = req.file.filename + '.' + originalExt;
-    //   const target_path = path.resolve(config.rootPath, `public/images/products/${filename}`);
-
-    //   const src = fs.createReadStream(tmp_path);
-    //   const dest = fs.createWriteStream(target_path);
-    //   src.pipe(dest);
-
-    //   src.on('end', async () => {
-    //     try {
-    //       const newProduct = await Product.create({
-    //         ...payload,
-    //         image_url: filename
-    //       });
-    //       return res.json({
-    //         message: 'New product added!',
-    //         data: newProduct
-    //       });
-    //     } catch (err) {
-    //       fs.unlinkSync(target_path);
-    //       if(err && err.name === 'ValidationError') {
-    //         return res.json({
-    //           error: 1,
-    //           message: err.message,
-    //           fields: err.errors
-    //         });
-    //       };
-    //     };
-    //   });
-    // } else {
-    //   const newProduct = await Product.create(payload);
-    //   return res.json({
-    //     message: 'New product added!',
-    //     data: newProduct
-    //   });
-    // };
   } catch (err) {
     if(err && err.name === 'ValidationError') {
       return res.json({
@@ -134,9 +96,67 @@ const index = async (req, res) => {
   };
 };
 
-const update = async (req,)
+const update = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const updatePayload = req.body;
+
+    if (!productId) {
+      return res.status(400).json({ error: 1, message: 'Product ID is required for updating' });
+    }
+
+    const existingProduct = await Product.findById(productId);
+    if (!existingProduct) {
+      return res.status(404).json({ error: 1, message: 'Product not found' });
+    }
+
+    let imagePath = existingProduct.image_url;
+    if (req.file) {
+      if (existingProduct.image_url) {
+        fs.unlink(existingProduct.image_url, (err) => {
+          if (err) {
+            console.error('Error deleting previous image:', err);
+          }
+        });
+      };
+      imagePath = req.file.path;
+    };
+
+    if (updatePayload.category) {
+      const isCategoryExist = await Category.findOne({ name: { $regex: updatePayload.category, $options: 'i' } });
+      if (isCategoryExist) {
+        updatePayload.category = isCategoryExist._id;
+      } else {
+        delete updatePayload.category;
+      }
+    }
+
+    if (updatePayload.tags && updatePayload.tags.length > 0) {
+      const isTagsExist = await Tag.find({ name: { $in: updatePayload.tags } });
+      if (isTagsExist.length > 0) {
+        updatePayload.tags = isTagsExist.map((tag) => tag._id);
+      } else {
+        delete updatePayload.tags;
+      }
+    };
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      { ...updatePayload, image_url: imagePath },
+      { new: true }
+    );
+
+    return res.json({
+      message: 'Product updated successfully',
+      data: updatedProduct
+    });
+  } catch (err) {
+    return res.status(500).json({ error: 1, message: err.message });
+  };
+};
 
 module.exports = {
   store,
-  index
+  index,
+  update
 };
