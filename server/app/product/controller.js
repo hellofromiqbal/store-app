@@ -155,8 +155,36 @@ const update = async (req, res) => {
   };
 };
 
+const destroy = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existingProduct = await Product.findById(id);
+    if (!existingProduct) {
+      return res.status(404).json({ error: 1, message: 'Product not found' });
+    };
+
+    if (existingProduct.image_url !== null) {
+      fs.unlink(existingProduct.image_url, (err) => {
+        if (err) {
+          console.error('Error deleting previous image:', err);
+        }
+      });
+    };
+
+    await Product.findByIdAndDelete(id);
+    return res.json({
+      message: 'Product deleted!',
+    });
+  } catch (err) {
+    return res.json({
+      message: err.message
+    });
+  };
+};
+
 module.exports = {
   store,
   index,
-  update
+  update,
+  destroy
 };
