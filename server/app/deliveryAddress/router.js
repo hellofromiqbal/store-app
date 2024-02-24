@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { police_check } = require('../../middlewares');
 const deliveryAddressController = require('./controller');
 
 router.get(
